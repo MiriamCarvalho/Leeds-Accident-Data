@@ -1,0 +1,100 @@
+---
+title: 'xxx'
+author: "xxx"
+date: "2024-10-12"
+output: html_document
+---
+
+import tidyverse, dplyr, and ggplot2
+```{r libaries, include=TRUE}
+#import libararies
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+```
+
+## Task 1
+
+```{r variable_check, include=TRUE}
+# Read accidents2014.csv and accidentsguidance.csv
+
+accident2014 <- read.csv(file = "accidents2014.csv")
+accidentsguidance <- read.csv(file = "accidentsguidance.csv")
+
+accident2014_var <- rownames(accident2014) #gets the row name in accidents2014.csv
+
+#gets the variables in column "1st Road Class" in accidentsguidance as they should 
+#match the rows in accident2014
+accidentsguidance_var <- accidentsguidance$"1st Road Class"
+
+#compare the variable names from accidents2014.csv and accidentsguidance.csv 
+#to make sure they match
+var_caomparison <- accident2014_var == accidentsguidance_var
+
+#outputting whether the coloumns in accidentsguidance match the rows in 
+#accident2014
+if (all(var_caomparison)) { print("All the variables in accidents2014.csv match the table in accidentsguidance.csv")
+
+}else { print("All the vairables in accidents2014.csv do not match the table in accidentsguidance.csv ") }
+```
+
+```{r dimention, include=TRUE}
+
+dim(accident2014) # gets the dimension of accidents2014.csv
+```
+
+## Task 2
+
+```{r variable names, include=TRUE}
+names(accident2014) #gets the variable names in the dataset
+
+```
+
+```{r dropping variables, include=TRUE}
+#dropping Accident.Date,Time..24hr, Road.Surface, Lighting.Conditions, and 
+#Weather.Conditions as they are not needed for the analysis
+mod_accident2014 <- select(accident2014, -Accident.Date, -Time..24hr.,
+                           -Road.Surface,-Lighting.Conditions, -Weather.Conditions)
+
+names(mod_accident2014) # gets the variable names in the modified dataset
+```
+
+```{r filtering for private cars and not on the motherway, include=TRUE}
+#filters the modified dataset to focus private cars of which are not on the motorway
+filtered_accidents <- filter(mod_accident2014, Type.of.Vehicle == 9, 
+                             X1st.Road.Class != 1)
+dim(filtered_accidents) #get's the dimentions of the dataset
+```
+
+## Task 3
+
+```{r distance from the center of Leeds and adding it to the dataset, include=TRUE}
+#co-ordinates of the center of leeds which will be used to calculate distance 
+#between leeed centre and the accidents
+leeds_center_easting <- 429967
+leeds_center_northing <- 434260
+
+# calculating the distance of the accidents from the center of leeds using the 
+# Pythagoras theorem and adding the values to the dataset
+accident_dis <- mutate(mod_accident2014, Distance.from.Leeds = sqrt(
+  (Grid.Ref..Easting - leeds_center_easting)^2 + (Grid.Ref..Northing - 
+                                                    leeds_center_northing)^2))
+
+```
+
+```{r the last few rows of the dataset, include=TRUE}
+#rearranging the accidents in ascending order from the center of leeds
+accident_order <- arrange(accident_dis, Distance.from.Leeds)
+tail(accident_order, 10) #prints the bottom 10 rows of the modified data
+```
+## Task 4
+
+```{r histogram for the modified data , include=TRUE}
+#histogram for the ordered accident from the center of leeds data
+#this histogram represents the age of the drivers to the number of accidents
+#and are grouped in 10s
+
+ggplot(accident_order, aes(x = Age.of.Casualty), aes(y = Number.of.Casualtie)) +
+  geom_histogram(binwidth = 10) +
+labs(x = "Casualty age", y = "No. of casualties") 
+```
